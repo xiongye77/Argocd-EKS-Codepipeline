@@ -5,6 +5,9 @@ docker folder include server.js, buildspec.yml and Dockerfile to build docker im
 
 Create AWS codepipeline for docker folder ,each time new docker image created it will change deployment file at kubernetes so Argocd will pick and sync it
 
+https://itnext.io/how-to-build-a-gitops-pipeline-on-a-stack-of-aws-services-63f7670b5f95
+
+
 Parameters:
   BranchName:
     Description: CodeCommit branch name
