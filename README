@@ -1,0 +1,4 @@
+There are two folders one for kubernets and one for docker image 
+
+kubernetes folders for argocd to deploy include deployment.yaml and service.yaml
+docker folder include server.js, buildspec.yml and Dockerfile to build docker image to push ECR
