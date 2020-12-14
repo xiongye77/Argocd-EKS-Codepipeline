@@ -5,6 +5,18 @@ docker folder include server.js, buildspec.yml and Dockerfile to build docker im
 
 Create AWS codepipeline for docker folder ,each time new docker image created it will change deployment file at kubernetes so Argocd will pick and sync it
 
+
+ArgoCD recommends keeping two separate repos: one for app code and another for manifests. The benefits of using separate Git repositories are:
+
+    There is a clear separation between application and configuration code. This prevents the entire CI build from running, which could take a long time, 
+    when you wish to only modify the manifests (e.g. adding a new env variable or changing a configmap).
+    
+    If you have a separate Production Engineering/SRE team responsible for deployments, you can separate access and have a cleaner audit log.
+    
+    Some applications may be deployed as a single unit or have dependent components (e.g. ELK stack, Prometheus + Grafana). A separate configuration repo
+    allows multiple application repos to push changes independently, but allow the CD tool to monitor a single repo and deploy all the components at the same time.
+    
+
 https://itnext.io/how-to-build-a-gitops-pipeline-on-a-stack-of-aws-services-63f7670b5f95
 
 
