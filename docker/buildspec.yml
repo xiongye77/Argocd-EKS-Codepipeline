@@ -1,0 +1,48 @@
+---
+version: 0.2
+env:
+  git-credential-helper: yes
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+    commands:
+      - apt-get -y update
+  pre_build:
+      commands:
+        - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2&
+        - timeout 20 sh -c "until docker info; do echo .; sleep 1; done"
+        - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+        - $(aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
+  build:
+    commands:
+      - docker build --tag $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$TAG
+  post_build:
+    commands:
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$TAG
+      - echo $TAG
+      - printf '[{"name":"gitops-demo-app","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
+      - git clone "https://git-codecommit.ap-south-1.amazonaws.com/v1/repos/gitops-demo-k8s-config"
+      - git config --global user.email "test@test.com"
+      - git config --global user.name "test"
+      - cd gitops-demo-k8s-config
+      - which awk
+      - cat deployment.yaml |grep gitops-demo-app 
+      - export  SEP=":"
+      - cat deployment.yaml |grep gitops-demo-app | awk -F $SEP  '{ print $3}' | tee aa
+        #- "export OLDTAG= $(cat deployment.yaml |grep gitops-demo-app | awk -F : '{ print $3}' )"
+      - export OLDTAG=`cat aa`
+      - rm aa
+      - sed 's/'$OLDTAG'/'$TAG'/g' ./deployment.yaml | tee aaa.yaml
+      - echo "cat aaa.yaml"
+      - cat aaa.yaml
+      - echo "cat deployment.yaml"
+      - cat deployment.yaml
+      - mv aaa.yaml deployment.yaml
+      - git add deployment.yaml
+      - git commit -am "change image id"
+      - git push origin master
+artifacts:
+  files: build.json
